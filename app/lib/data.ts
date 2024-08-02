@@ -9,13 +9,14 @@ import {
 } from './definitions';
 import { formatCurrency } from './utils';
 
+/* pulls list of latest invoice for dashboard overview */
 export async function fetchRevenue() {
   try {
     // Artificially delay a response for demo purposes.
     // Don't do this in production :)
 
-    console.log('Fetching revenue data...');
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    //console.log('Fetching revenue data...');
+    //await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await sql<Revenue>`SELECT * FROM revenue`;
 
@@ -28,6 +29,7 @@ export async function fetchRevenue() {
   }
 }
 
+/* pulls list of latest invoice for dashboard overview */
 export async function fetchLatestInvoices() {
   try {
     const data = await sql<LatestInvoiceRaw>`
@@ -47,7 +49,7 @@ export async function fetchLatestInvoices() {
     throw new Error('Failed to fetch the latest invoices.');
   }
 }
-
+/* pulls data for dashboard overview cards */
 export async function fetchCardData() {
   try {
     // You can probably combine these into a single SQL query
@@ -83,6 +85,7 @@ export async function fetchCardData() {
   }
 }
 
+/* pulls filtered list for Table component on Invoices  */
 const ITEMS_PER_PAGE = 6;
 export async function fetchFilteredInvoices(
   query: string,
@@ -119,6 +122,7 @@ export async function fetchFilteredInvoices(
   }
 }
 
+/* called from invoices page file, only calc's total, no row data */
 export async function fetchInvoicesPages(query: string) {
   try {
     const count = await sql`SELECT COUNT(*)
@@ -140,6 +144,7 @@ export async function fetchInvoicesPages(query: string) {
   }
 }
 
+/* fetches data to hydrate invoice edit page */
 export async function fetchInvoiceById(id: string) {
   try {
     const data = await sql<InvoiceForm>`
@@ -165,6 +170,7 @@ export async function fetchInvoiceById(id: string) {
   }
 }
 
+/* populates dropdown list on invoices/edit/id and invoices/create pages */
 export async function fetchCustomers() {
   try {
     const data = await sql<CustomerField>`
@@ -183,7 +189,27 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+const CUST_PER_PAGE = 4;
+/* called from customers page, return total page calc of filtered customers */
+export async function fetchFilteredCustomerPageCount(query: string) {
+  try {
+    const count = await sql`SELECT COUNT(*)
+    FROM customers
+    WHERE
+      customers.name ILIKE ${`%${query}%`} OR
+      customers.email ILIKE ${`%${query}%`}
+  `;
+    return Math.ceil(count.rows[0].count/CUST_PER_PAGE);
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of invoices.');
+  }
+}
+/* pulls current page's filtered customers for customer Table component */
+export async function fetchFilteredCustomers(
+  query: string, 
+  currentPage: number) {
+    const offset = (currentPage - 1) * CUST_PER_PAGE;
   try {
     const data = await sql<CustomersTableType>`
 		SELECT
@@ -201,15 +227,10 @@ export async function fetchFilteredCustomers(query: string) {
         customers.email ILIKE ${`%${query}%`}
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
 		ORDER BY customers.name ASC
+    LIMIT ${CUST_PER_PAGE} OFFSET ${offset}
 	  `;
 
-    const customers = data.rows.map((customer) => ({
-      ...customer,
-      total_pending: formatCurrency(customer.total_pending),
-      total_paid: formatCurrency(customer.total_paid),
-    }));
-
-    return customers;
+    return data.rows;
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
