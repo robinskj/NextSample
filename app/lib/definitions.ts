@@ -86,3 +86,5 @@ export type InvoiceForm = {
   amount: number;
   status: 'pending' | 'paid';
 };
+
+export const nameRegex = /(?=.*[a-zA-Z&(()+'",.])\w+/;
