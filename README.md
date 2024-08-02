@@ -2,7 +2,7 @@
 
 This is the application created in the Next.js App Router Course. Repo can be cloned and run locally via [localhost](https://localhost:3000/dashboard) via `pnpm dev` command.
 
-Application is also deployed using Vercel [here](https://nextjs-dashboard-git-dev-robinskjs-projects.vercel.app/dashboard).
+Application is also deployed using Vercel [here](https://nextjs-dashboard-git-dev-robinskjs-projects.vercel.app/dashboard).  Test user is `user@nextmail.com` password: `123456`
 
 
 
